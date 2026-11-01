@@ -159,18 +159,60 @@
             "items": {
               "$itemId": {
                 ".validate": "newData.hasChildren(['name','status'])",
-                ".write": "auth != null && (root.child('system/admins/' + auth.uid).exists() || ((root.child('orgs').child($orgId).child('members').child(auth.uid).child('status').val() === 'active' && root.child('orgs').child($orgId).child('members').child(auth.uid).child('role').val() === 'partner')) || ((root.child('orgs').child($orgId).child('members').child(auth.uid).child('status').val() === 'active' && root.child('orgs').child($orgId).child('members').child(auth.uid).child('role').val() === 'employee') && root.child('orgs').child($orgId).child('projectIndex').child($projectId).exists()))",
+                ".write": "auth != null && (root.child('system/admins/' + auth.uid).child('status').val() === 'active' || ((root.child('orgs').child($orgId).child('members').child(auth.uid).child('status').val() === 'active' && root.child('orgs').child($orgId).child('members').child(auth.uid).child('role').val() === 'partner')) || ((root.child('orgs').child($orgId).child('members').child(auth.uid).child('status').val() === 'active' && root.child('orgs').child($orgId).child('members').child(auth.uid).child('role').val() === 'employee') && root.child('orgs').child($orgId).child('projectIndex').child($projectId).exists()))",
                 "name": {
                   ".validate": "newData.isString() && newData.val().length <= 240"
+                },
+                "description": {
+                  ".validate": "newData.isString() && newData.val().length <= 2000"
                 },
                 "status": {
                   ".validate": "newData.isString()"
                 },
+                "quantity": {
+                  ".validate": "newData.isNumber()"
+                },
+                "unit": {
+                  ".validate": "newData.isString() && newData.val().length <= 40"
+                },
+                "dimension": {
+                  ".validate": "newData.isString() && newData.val().length <= 120"
+                },
+                "material": {
+                  ".validate": "newData.isString() && newData.val().length <= 240"
+                },
+                "assignedToUid": {
+                  ".validate": "newData.isString()"
+                },
+                "dueDate": {
+                  ".validate": "newData.isString() && newData.val().length <= 40"
+                },
+                "note": {
+                  ".validate": "newData.isString() && newData.val().length <= 2000"
+                },
+                "createdBy": {
+                  ".validate": "newData.isString()"
+                },
+                "createdAt": {
+                  ".validate": "newData.isNumber()"
+                },
                 "updatedAt": {
                   ".validate": "newData.isNumber()"
                 },
+                "position": {
+                  ".validate": "newData.isNumber()"
+                },
+                "progress": {
+                  ".validate": "newData.isNumber()"
+                },
+                "stageProgress": {
+                  ".validate": "newData.hasChildren()"
+                },
+                "mediaIds": {
+                  ".validate": "newData.hasChildren() || !newData.exists()"
+                },
                 "$other": {
-                  ".validate": false
+                  ".validate": true
                 }
               }
             },
@@ -180,10 +222,16 @@
                 "name": {
                   ".validate": "newData.isString() && newData.val().length <= 120"
                 },
+                "position": {
+                  ".validate": "newData.isNumber()"
+                },
                 "$other": {
-                  ".validate": false
+                  ".validate": true
                 }
               }
+            },
+            "$other": {
+              ".validate": true
             }
           }
         },
