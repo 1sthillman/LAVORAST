@@ -2272,7 +2272,8 @@ document.addEventListener('keydown',e=>{const t=e.target;if(e.key!=='Enter'||!on
       
       const sid=`${uid0}|snap|${p.id}`;const rec=await metaGet(sid);const prevSnap=rec?.snapshot||null;
       const {snap,flags}=makeQueueProject(p,prevSnap,false);
-      if(!flags.fin&&!flags.workflow&&!flags.public&&!flags.idx)continue;
+      const existsInFirebase=rec?.remoteUpdatedAt!=null;
+      if(existsInFirebase&&!flags.fin&&!flags.workflow&&!flags.public&&!flags.idx)continue;
       const cached=await cacheGet(uid0,'project',p.id);
       const qid=`${uid0}|project|${p.id}`;
       const existing=await getStore('cloudQueue',qid);
