@@ -226,6 +226,39 @@
         
         "projectInvites": {
           ".read": "auth != null && (root.child('system/admins/' + auth.uid).exists() || (root.child('orgs').child($orgId).child('members').child(auth.uid).child('status').val() === 'active' && root.child('orgs').child($orgId).child('members').child(auth.uid).child('role').val() === 'partner'))"
+        },
+        
+        "mediaMetadata": {
+          "staff": {
+            "$projectId": {
+              "$mediaId": {
+                ".read": "auth != null && (root.child('system/admins/' + auth.uid).exists() || (root.child('orgs').child($orgId).child('members').child(auth.uid).child('status').val() === 'active' && root.child('orgs').child($orgId).child('members').child(auth.uid).child('role').val() === 'partner') || (root.child('orgs').child($orgId).child('members').child(auth.uid).child('status').val() === 'active' && root.child('orgs').child($orgId).child('members').child(auth.uid).child('role').val() === 'employee'))",
+                ".write": "auth != null && (root.child('system/admins/' + auth.uid).exists() || (root.child('orgs').child($orgId).child('members').child(auth.uid).child('status').val() === 'active' && root.child('orgs').child($orgId).child('members').child(auth.uid).child('role').val() === 'partner') || ((root.child('orgs').child($orgId).child('members').child(auth.uid).child('status').val() === 'active' && root.child('orgs').child($orgId).child('members').child(auth.uid).child('role').val() === 'employee') && root.child('orgs').child($orgId).child('projectIndex').child($projectId).exists() && (!data.exists() || data.child('createdBy').val() === auth.uid)))"
+              }
+            }
+          }
+        },
+        
+        "mediaThumbnails": {
+          "staff": {
+            "$projectId": {
+              "$mediaId": {
+                ".read": "auth != null && (root.child('system/admins/' + auth.uid).exists() || (root.child('orgs').child($orgId).child('members').child(auth.uid).child('status').val() === 'active' && root.child('orgs').child($orgId).child('members').child(auth.uid).child('role').val() === 'partner') || (root.child('orgs').child($orgId).child('members').child(auth.uid).child('status').val() === 'active' && root.child('orgs').child($orgId).child('members').child(auth.uid).child('role').val() === 'employee'))",
+                ".write": "auth != null && (root.child('system/admins/' + auth.uid).exists() || (root.child('orgs').child($orgId).child('members').child(auth.uid).child('status').val() === 'active' && root.child('orgs').child($orgId).child('members').child(auth.uid).child('role').val() === 'partner') || ((root.child('orgs').child($orgId).child('members').child(auth.uid).child('status').val() === 'active' && root.child('orgs').child($orgId).child('members').child(auth.uid).child('role').val() === 'employee') && root.child('orgs').child($orgId).child('mediaMetadata').child('staff').child($projectId).child($mediaId).exists() && root.child('orgs').child($orgId).child('mediaMetadata').child('staff').child($projectId).child($mediaId).child('createdBy').val() === auth.uid))"
+              }
+            }
+          }
+        },
+        
+        "mediaPayloads": {
+          "staff": {
+            "$projectId": {
+              "$mediaId": {
+                ".read": "auth != null && (root.child('system/admins/' + auth.uid).exists() || (root.child('orgs').child($orgId).child('members').child(auth.uid).child('status').val() === 'active' && root.child('orgs').child($orgId).child('members').child(auth.uid).child('role').val() === 'partner') || (root.child('orgs').child($orgId).child('members').child(auth.uid).child('status').val() === 'active' && root.child('orgs').child($orgId).child('members').child(auth.uid).child('role').val() === 'employee'))",
+                ".write": "auth != null && (root.child('system/admins/' + auth.uid).exists() || (root.child('orgs').child($orgId).child('members').child(auth.uid).child('status').val() === 'active' && root.child('orgs').child($orgId).child('members').child(auth.uid).child('role').val() === 'partner') || ((root.child('orgs').child($orgId).child('members').child(auth.uid).child('status').val() === 'active' && root.child('orgs').child($orgId).child('members').child(auth.uid).child('role').val() === 'employee') && root.child('orgs').child($orgId).child('mediaMetadata').child('staff').child($projectId).child($mediaId).exists() && root.child('orgs').child($orgId).child('mediaMetadata').child('staff').child($projectId).child($mediaId).child('createdBy').val() === auth.uid))"
+              }
+            }
+          }
         }
       }
     }
