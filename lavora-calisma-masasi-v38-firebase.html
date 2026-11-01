@@ -439,7 +439,7 @@ function trashSheet(){const X=P.filter(p=>p.d).sort((a,b)=>b.d-a.d);if(!X.length
 document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id,p=P.find(p=>p.id==id);
 if(a=='trash')trashSheet();
 else if(a=='rest'&&p){p.d=0;p.u=Date.now();save();render();trashSheet();toast('Proje geri yüklendi')}
-else if(a=='purge'&&p){sure({title:'Kalıcı olarak silinsin mi?',text:'Bu işlem geri alınamaz.',ok:'Kalıcı sil',danger:1}).then(async y=>{if(y){P=P.filter(x=>x.id!=id);delete saved[id];if(window.__LAVORA_CLOUD_MODE__&&window.LavoraCloud){try{const uidFn=()=>{try{return window.LavoraCloud.state?.user?.uid||window.firebase?.auth?.()?.currentUser?.uid||'unknown'}catch{return 'unknown'}};const uid0=uidFn();await Promise.all([deleteStore('cloudCache',`${uid0}|project|${id}`),deleteStore('cloudMeta',`${uid0}|snap|${id}`)]).catch(()=>{});}catch(_){}}render();trashSheet();toast('Proje kalıcı olarak silindi')}})}},true);
+else if(a=='purge'&&p){sure({title:'Kalıcı olarak silinsin mi?',text:'Bu işlem geri alınamaz.',ok:'Kalıcı sil',danger:1}).then(async y=>{if(y){P=P.filter(x=>x.id!=id);delete saved[id];if(window.__LAVORA_CLOUD_MODE__&&window.LavoraCloud){try{const uidFn=()=>{try{return window.LavoraCloud.state?.user?.uid||window.firebase?.auth?.()?.currentUser?.uid||'unknown'}catch{return 'unknown'}};const uid0=uidFn();await Promise.all([deleteStore('cloudCache',`${uid0}|project|${id}`),deleteStore('cloudMeta',`${uid0}|snap|${id}`)]).catch(()=>{});if(window.LavoraCloud.deleteProject){await window.LavoraCloud.deleteProject(id).catch(e=>console.error('Firebase proje silme hatası:',e));}}catch(e){console.error('Purge hatası:',e);}}save();render();trashSheet();toast('Proje kalıcı olarak silindi')}})}},true);
 const sanitizeP=(L=P)=>{let fx=0;const seen=new Set;L.forEach(p=>{if(typeof p.id!='string'||!p.id||seen.has(p.id)){p.id=uid();fx++}seen.add(p.id);if(typeof p.name!='string')p.name='Proje';if(typeof p.cust!='string')p.cust='';if(p.kdv!=null&&!Number.isFinite(+p.kdv)){p.kdv=0;fx++}
 if(!Array.isArray(p.s)||!p.s.length){p.s=[{n:'Sayfa 1',h:['Açıklama','Tutar'],pre:[],r:[['','']]}];fx++}
 p.s=p.s.filter(x=>x&&typeof x=='object');if(!p.s.length)p.s=[{n:'Sayfa 1',h:['Açıklama','Tutar'],pre:[],r:[['','']]}];
@@ -2311,6 +2311,14 @@ document.addEventListener('keydown',e=>{const t=e.target;if(e.key!=='Enter'||!on
     await queuePut({id:qid,uid:uid0,kind:'deleteLedger',recordId:String(id),createdAt:now(),updatedAt:now(),attempts:0});
     if(state.connected) flushQueue().catch(e=>{state.lastError=msgError(e);updateCloudBadge()});
   }
+  async function deleteProject(projectId) {
+    if(!isPrivileged())return;
+    const uid0=uid(), qid=`${uid0}|deleteProject|${String(projectId)}`;
+    await deleteStore('cloudCache',`${uid0}|project|${String(projectId)}`).catch(()=>{});
+    await deleteStore('cloudMeta',`${uid0}|snap|${String(projectId)}`).catch(()=>{});
+    await queuePut({id:qid,uid:uid0,kind:'deleteProject',projectId:String(projectId),createdAt:now(),updatedAt:now(),attempts:0});
+    if(state.connected) flushQueue().catch(e=>{state.lastError=msgError(e);updateCloudBadge()});
+  }
   function decodeScan(row) {
     if(!row)return null;
     const parse=(v,fallback)=>{try{return typeof v==='string'?JSON.parse(v):v??fallback}catch(_){return fallback;}};
@@ -2406,6 +2414,13 @@ document.addEventListener('keydown',e=>{const t=e.target;if(e.key!=='Enter'||!on
       await withTimeout(ref(`ledger/${q.recordId}`).set(q.payload),18000,'Defter kaydı yazması zaman aşımına uğradı');
     } else if(q.kind==='deleteLedger') {
       const rec=await safeGet(rolePath(`ledger/${q.recordId}`)).catch(()=>null);await withTimeout(ref(`ledger/${q.recordId}`).remove(),18000,'Defter kaydı silinemedi');for(const photoId of rec?.ph||[])await ref(`receipts/${photoId}`).remove().catch(()=>{});
+    } else if(q.kind==='deleteProject') {
+      await Promise.all([
+        withTimeout(ref(`projectIndex/${q.projectId}`).remove(),18000,'projectIndex silinemedi'),
+        withTimeout(ref(`projectPublic/${q.projectId}`).remove(),18000,'projectPublic silinemedi'),
+        withTimeout(ref(`projectFinancials/${q.projectId}`).remove(),18000,'projectFinancials silinemedi'),
+        withTimeout(ref(`workflowStaff/${q.projectId}`).remove(),18000,'workflowStaff silinemedi')
+      ]).catch(e=>{console.error('Proje silme hatası:',e);throw e;});
     } else if(q.kind==='scan') {
       const exists=await safeGet(rolePath(`scans/${q.scanId}`)).catch(()=>null);
       if(!exists)await withTimeout(ref(`scans/${q.scanId}`).set(q.payload),15000,'Tarama kaydı buluta yazılamadı');
@@ -3032,7 +3047,7 @@ document.addEventListener('keydown',e=>{const t=e.target;if(e.key!=='Enter'||!on
   window.addEventListener('offline',()=>{state.connected=false;updateCloudBadge();});
   state.adminProfiles={};state.adminMembers={};state.adminRequests={};state.migrationMessage='';
   window.LavoraCloud={
-    version:'1.0.0',startCloudMode,openCloud,queueSave,queueWorkflowItem,queueLedger,deleteLedger,queueScan,listScans,getScan,uploadReceipt,loadReceipt,mediaUrl,flushQueue,
+    version:'1.0.0',startCloudMode,openCloud,queueSave,queueWorkflowItem,queueLedger,deleteLedger,deleteProject,queueScan,listScans,getScan,uploadReceipt,loadReceipt,mediaUrl,flushQueue,
     getState:()=>({uid:uid(),role:state.role,connected:state.connected,outboxCount:state.outboxCount,conflicts:state.conflicts.length}),
     getLedgerRecords:async()=>{if(state.ledgerRecords?.length)return state.ledgerRecords.map(clone);return (await cacheAll(uid(),'ledger')).map(x=>clone(x.payload));},
     isActive:()=>!!state.cfg&&!!state.user&&!!state.role,
